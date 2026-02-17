@@ -1,6 +1,0 @@
-@EmployeeDemoCS_HostAddress = http://localhost:5087
-
-GET {{EmployeeDemoCS_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
