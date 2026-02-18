@@ -1,0 +1,17 @@
+bin/
+obj/
+.vs/
+.git/
+Dockerfile*
+docker-compose*
+**/node_modules
+*.user
+*.suo
+*.userprefs
+*.log
+*.db
+.env
+.idea/
+*.DS_Store
+# Ignore .env file containing sensitive information --- IGNORE ---
+.env

@@ -1,0 +1,9 @@
+﻿using EmployeeDemo.Application.Repositories;
+
+namespace EmployeeDemo.Application.Interfaces
+{
+    public interface IClaimsService
+    {
+        public Guid GetCurrentUserId { get; }
+    }
+}
