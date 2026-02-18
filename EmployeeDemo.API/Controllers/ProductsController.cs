@@ -6,7 +6,7 @@ using EmployeeDemo.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace EmployeeDemo.API.Controllers
 {
@@ -47,7 +47,7 @@ namespace EmployeeDemo.API.Controllers
                     result.HasNext,
                     result.HasPrevious
                 };
-                Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
+                Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metadata));
                 return Ok(result);
             }
             catch (Exception ex)
