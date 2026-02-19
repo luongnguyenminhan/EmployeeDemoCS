@@ -34,12 +34,12 @@ This skill uses generic placeholders in code examples to be reusable across proj
 | Placeholder | Meaning | Examples |
 |-------------|---------|----------|
 | `<SOLUTION_NAME>` | Your project's root namespace | `EmployeeDemo`, `OrderSystem`, `BlogApp` |
-| `<DOMAIN_ENTITY>` | A business entity class name | `Product`, `Account`, `Invoice`, `Customer` |
+| `<DOMAIN_ENTITY>` | A business entity class name | `Item`, `Account`, `Invoice`, `Customer` |
 | `<ENTITY>` | Short form of entity name (used in class names) | `Product`, `Account`, `Invoice` |
 | `<entities>` | Lowercase plural of entity (used in URLs) | `products`, `accounts`, `invoices` |
 | `<entity>` | Lowercase singular of entity (used in variables) | `product`, `account`, `invoice` |
-| `<ANOTHER_ENTITY>` | Second distinct entity in examples | `Account`, `Order`, `Student` |
-| `<THIRD_ENTITY>` | Third distinct entity in examples | `Student`, `Invoice`, `Payment` |
+| `<ANOTHER_ENTITY>` | Second distinct entity in examples | `Account`, `Order`, `Customer` |
+| `<THIRD_ENTITY>` | Third distinct entity in examples | `Customer`, `Invoice`, `Payment` |
 | `<PROPERTY_NAME>` | A property representing an entity's main name | `ProductName`, `AccountEmail`, `CustomerName` |
 | `<PROPERTY_DESCRIPTION>` | A property for descriptive text | `ProductDescription`, `AccountBio` |
 | `<PROPERTY_VALUE>` | A numeric or core property of an entity | `ProductPrice`, `AccountBalance`, `OrderTotal` |

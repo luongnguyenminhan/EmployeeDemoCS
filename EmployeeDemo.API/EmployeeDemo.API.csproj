@@ -17,4 +17,10 @@
     <ProjectReference Include="..\EmployeeDemo.Infrastructure\EmployeeDemo.Infrastructure.csproj" />
   </ItemGroup>
 
+  <!-- Exclude API controllers for Product and Student (removed) -->
+  <ItemGroup>
+    <Compile Remove="Controllers\ProductsController.cs" />
+    <Compile Remove="Controllers\StudentsController.cs" />
+  </ItemGroup>
+
 </Project>

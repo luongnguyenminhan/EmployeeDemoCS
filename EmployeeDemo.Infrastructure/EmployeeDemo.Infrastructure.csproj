@@ -25,4 +25,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!-- Exclude Product/Student repositories and Fluent API configs -->
+  <ItemGroup>
+    <Compile Remove="Repositories\ProductRepository.cs" />
+    <Compile Remove="Repositories\StudentRepository.cs" />
+    <Compile Remove="FluentAPIs\ProductConfig.cs" />
+    <Compile Remove="FluentAPIs\StudentConfig.cs" />
+  </ItemGroup>
+
 </Project>

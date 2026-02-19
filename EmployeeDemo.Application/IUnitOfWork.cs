@@ -9,7 +9,7 @@ namespace EmployeeDemo.Application
 {
     public interface IUnitOfWork
     {
-        public IProductRepository ProductRepository { get; }
+        // ProductRepository removed — Product entity/services deleted
 
         public Task<int> SaveChangeAsync();
     }

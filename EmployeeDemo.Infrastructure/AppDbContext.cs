@@ -17,7 +17,8 @@ namespace EmployeeDemo.Infrastructure
         }
 
         public DbSet<Account> Accounts { get; set; }
-        public DbSet<Product> Products { get; set; }
-        public DbSet<Student> Students { get; set; }
+        // Product and Student removed from DbContext (entities/tables deleted)
+        // public DbSet<Product> Products { get; set; }
+        // public DbSet<Student> Students { get; set; }
     }
 }

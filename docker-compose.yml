@@ -6,6 +6,7 @@ services:
     container_name: employeedemo-db
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_HOST: '%'
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
@@ -30,6 +31,24 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Server=db;Port=3306;Database=${MYSQL_DATABASE};User=${MYSQL_USER};Password=${MYSQL_PASSWORD};"
+      # optional overrides for the entrypoint wait script
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_WAIT_TIMEOUT: "60"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  adminer:
+    image: adminer:latest
+    container_name: employeedemo-adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DEFAULT_USER: ${ADMINER_DEFAULT_USER}
+      ADMINER_DEFAULT_PASSWORD: ${ADMINER_DEFAULT_PASSWORD}
     depends_on:
       - db
     restart: unless-stopped

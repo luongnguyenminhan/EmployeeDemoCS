@@ -11,14 +11,11 @@ namespace EmployeeDemo.Infrastructure
     public class UnitOfWork : IUnitOfWork
     {
         private readonly AppDbContext _dbContext;
-        private readonly IProductRepository _productRepository;
 
-        public UnitOfWork(AppDbContext dbContext, IProductRepository productRepository) 
-        { 
+        public UnitOfWork(AppDbContext dbContext)
+        {
             _dbContext = dbContext;
-            _productRepository = productRepository;
         }
-        public IProductRepository ProductRepository => _productRepository;
 
         public async Task<int> SaveChangeAsync()
         {

@@ -27,11 +27,11 @@ namespace EmployeeDemo.Infrastructure
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IAccountService, AccountService>();
 
-            services.AddScoped<IProductRepository, ProductRepository>();
-            services.AddScoped<IProductService, ProductService>();
-
-            services.AddScoped<IStudentRepository, StudentRepository>();
-            services.AddScoped<IStudentService, StudentService>();
+            // Product and Student repositories/services removed per request
+            // services.AddScoped<IProductRepository, ProductRepository>();
+            // services.AddScoped<IProductService, ProductService>();
+            // services.AddScoped<IStudentRepository, StudentRepository>();
+            // services.AddScoped<IStudentService, StudentService>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 

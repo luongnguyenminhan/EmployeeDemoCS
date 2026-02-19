@@ -23,6 +23,10 @@ ENV ASPNETCORE_URLS=http://+:80
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 COPY --from=build /app/publish .
+# copy entrypoint script and make executable
+COPY docker-entrypoint.sh ./
+RUN chmod +x ./docker-entrypoint.sh
+
 EXPOSE 80
 
-ENTRYPOINT ["dotnet", "EmployeeDemo.API.dll"]
+ENTRYPOINT ["/bin/bash", "./docker-entrypoint.sh"]
