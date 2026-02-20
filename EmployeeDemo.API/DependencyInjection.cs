@@ -1,10 +1,12 @@
 ﻿using EmployeeDemo.Application.Interfaces;
 using System.Diagnostics;
+using EmployeeDemo.API.Authorization;
 using EmployeeDemo.API.Middlewares;
 using EmployeeDemo.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi ;
+using Microsoft.OpenApi;
 using System.Text;
 
 namespace EmployeeDemo.API
@@ -48,7 +50,19 @@ namespace EmployeeDemo.API
                 };
             });
 
-            services.AddAuthorization();
+            // Add authorization with valid session policy as default
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("ValidSession", policy =>
+                    policy.Requirements.Add(new ValidSessionRequirement()));
+                
+                // Set ValidSession as the default policy for all [Authorize] attributes
+                options.DefaultPolicy = options.GetPolicy("ValidSession");
+            });
+
+            // Register the authorization handler
+            services.AddScoped<IAuthorizationHandler, ValidSessionHandler>();
+
             return services;
         }
 

@@ -51,5 +51,10 @@ namespace EmployeeDemo.Application.Services
         {
             await _accountRepository.LogoutAllDevicesAsync(userId);
         }
+
+        public async Task<CurrentUserSessionResponse?> GetCurrentUserWithSessionsAsync(int userId, string currentDeviceId)
+        {
+            return await _accountRepository.GetCurrentUserWithSessionsAsync(userId, currentDeviceId);
+        }
     }
 }

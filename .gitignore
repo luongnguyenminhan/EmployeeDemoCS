@@ -400,4 +400,5 @@ FodyWeavers.xsd
 *.sln.iml
 .env
 .docs/
+.tasks/
 # End of https://www.toptal.com/developers/gitignore/api/csharp

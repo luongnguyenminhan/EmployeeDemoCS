@@ -1,3 +1,5 @@
+using EmployeeDemo.Application.ViewModels;
+
 namespace EmployeeDemo.Application.Interfaces
 {
     /// <summary>
@@ -40,5 +42,39 @@ namespace EmployeeDemo.Application.Interfaces
         /// <param name="userId">The user ID (Account.Id)</param>
         /// <returns>Completed task</returns>
         Task RemoveAllAsync(int userId);
+
+        /// <summary>
+        /// Stores session metadata (device info) for a user device.
+        /// Uses same TTL as refresh token.
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <param name="deviceId">The device identifier</param>
+        /// <param name="session">Session metadata to store</param>
+        /// <param name="expiryInSeconds">Session expiration time in seconds</param>
+        Task StoreSessionAsync(int userId, string deviceId, SessionModel session, int expiryInSeconds);
+
+        /// <summary>
+        /// Retrieves session metadata for a user device.
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <param name="deviceId">The device identifier</param>
+        /// <returns>Session metadata if found; null otherwise</returns>
+        Task<SessionModel?> GetSessionAsync(int userId, string deviceId);
+
+        /// <summary>
+        /// Retrieves all active sessions for a user.
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <returns>List of all active sessions (may be empty)</returns>
+        Task<List<SessionModel>> GetAllSessionsAsync(int userId);
+
+        /// <summary>
+        /// Updates the LastActivity timestamp for a session.
+        /// Called after token refresh to track activity.
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <param name="deviceId">The device identifier</param>
+        /// <param name="lastActivityTime">The new last activity time</param>
+        Task UpdateLastActivityAsync(int userId, string deviceId, DateTime lastActivityTime);
     }
 }

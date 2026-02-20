@@ -1,8 +1,10 @@
 using EmployeeDemo.Application.Interfaces;
+using EmployeeDemo.Application.ViewModels;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace EmployeeDemo.Infrastructure.Services
 {
@@ -48,33 +50,124 @@ namespace EmployeeDemo.Infrastructure.Services
         }
 
         /// <summary>
-        /// Removes a specific device's refresh token (logout from single device).
+        /// Removes a specific device's refresh token and session (logout from single device).
         /// </summary>
         public async Task RemoveAsync(int userId, string deviceId)
         {
             var db = _redis.GetDatabase();
-            var key = GenerateKey(userId, deviceId);
+            var refreshKey = GenerateKey(userId, deviceId);
+            var sessionKey = GenerateSessionKey(userId, deviceId);
 
-            await db.KeyDeleteAsync(key);
+            await db.KeyDeleteAsync(new RedisKey[] { refreshKey, sessionKey });
         }
 
         /// <summary>
-        /// Removes all refresh tokens for a user across all devices (logout all devices).
-        /// Uses SCAN + UNLINK for efficient pattern-based deletion.
+        /// Removes all refresh tokens and sessions for a user across all devices (logout all devices).
+        /// Uses SCAN + DELETE for efficient pattern-based deletion.
         /// </summary>
         public async Task RemoveAllAsync(int userId)
         {
             var server = _redis.GetServer(_redis.GetEndPoints().First());
-            var pattern = $"refresh:{userId}:*";
+            var refreshPattern = $"refresh:{userId}:*";
+            var sessionPattern = $"session:{userId}:*";
 
-            // Scan for all keys matching the pattern
-            var keys = server.Keys(pattern: pattern);
+            // Scan for all refresh tokens
+            var refreshKeys = server.Keys(pattern: refreshPattern);
+            // Scan for all sessions
+            var sessionKeys = server.Keys(pattern: sessionPattern);
 
-            if (keys.Any())
+            var allKeys = new List<RedisKey>();
+            allKeys.AddRange(refreshKeys);
+            allKeys.AddRange(sessionKeys);
+
+            if (allKeys.Any())
             {
                 var db = _redis.GetDatabase();
-                await db.KeyDeleteAsync(keys.ToArray());
+                await db.KeyDeleteAsync(allKeys.ToArray());
             }
+        }
+
+        /// <summary>
+        /// Stores session metadata as JSON for a user device.
+        /// </summary>
+        public async Task StoreSessionAsync(int userId, string deviceId, SessionModel session, int expiryInSeconds)
+        {
+            var db = _redis.GetDatabase();
+            var key = GenerateSessionKey(userId, deviceId);
+            var json = JsonSerializer.Serialize(session);
+
+            await db.StringSetAsync(key, json, TimeSpan.FromSeconds(expiryInSeconds));
+        }
+
+        /// <summary>
+        /// Retrieves session metadata from Redis.
+        /// </summary>
+        public async Task<SessionModel?> GetSessionAsync(int userId, string deviceId)
+        {
+            var db = _redis.GetDatabase();
+            var key = GenerateSessionKey(userId, deviceId);
+
+            var value = await db.StringGetAsync(key);
+            return value.IsNull ? null : JsonSerializer.Deserialize<SessionModel>(value.ToString());
+        }
+
+        /// <summary>
+        /// Retrieves all active sessions for a user by scanning session keys.
+        /// </summary>
+        public async Task<List<SessionModel>> GetAllSessionsAsync(int userId)
+        {
+            var server = _redis.GetServer(_redis.GetEndPoints().First());
+            var pattern = $"session:{userId}:*";
+            var keys = server.Keys(pattern: pattern);
+
+            if (!keys.Any())
+                return [];
+
+            var db = _redis.GetDatabase();
+            var sessions = new List<SessionModel>();
+
+            foreach (var key in keys)
+            {
+                var value = await db.StringGetAsync(key);
+                if (!value.IsNull)
+                {
+                    var session = JsonSerializer.Deserialize<SessionModel>(value.ToString());
+                    if (session != null)
+                        sessions.Add(session);
+                }
+            }
+
+            return sessions;
+        }
+
+        /// <summary>
+        /// Updates LastActivity timestamp for a session.
+        /// </summary>
+        public async Task UpdateLastActivityAsync(int userId, string deviceId, DateTime lastActivityTime)
+        {
+            var db = _redis.GetDatabase();
+            var key = GenerateSessionKey(userId, deviceId);
+
+            var value = await db.StringGetAsync(key);
+            if (!value.IsNull)
+            {
+                var session = JsonSerializer.Deserialize<SessionModel>(value.ToString());
+                if (session != null)
+                {
+                    var updated = session with { LastActivity = lastActivityTime };
+                    var json = JsonSerializer.Serialize(updated);
+                    var ttl = await db.KeyTimeToLiveAsync(key);
+                    await db.StringSetAsync(key, json, ttl);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Generates the Redis key for a user's device session.
+        /// </summary>
+        private static string GenerateSessionKey(int userId, string deviceId)
+        {
+            return $"session:{userId}:{deviceId}";
         }
 
         /// <summary>

@@ -112,5 +112,29 @@ namespace EmployeeDemo.API.Controllers
                 return BadRequest(new { Status = false, Message = ex.Message });
             }
         }
+
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentUserAsync()
+        {
+            try
+            {
+                var userId = _claimsService.GetCurrentUserId;
+                var deviceId = _claimsService.GetDeviceId;
+
+                if (userId == 0 || string.IsNullOrWhiteSpace(deviceId))
+                    return Unauthorized(new { Status = false, Message = "User not authenticated" });
+
+                var result = await _accountService.GetCurrentUserWithSessionsAsync(userId, deviceId);
+                if (result == null)
+                    return NotFound(new { Status = false, Message = "User not found" });
+
+                return Ok(new { Status = true, Data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Status = false, Message = ex.Message });
+            }
+        }
     }
 }

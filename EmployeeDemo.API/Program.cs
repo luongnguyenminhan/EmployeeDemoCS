@@ -1,4 +1,5 @@
 using EmployeeDemo.API;
+using EmployeeDemo.API.Middlewares;
 using EmployeeDemo.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

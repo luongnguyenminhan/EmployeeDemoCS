@@ -7,6 +7,7 @@ using EmployeeDemo.Application.ViewModels.ResponseModels;
 using EmployeeDemo.Domain.Entities;
 using EmployeeDemo.Domain.Enums;
 using EmployeeDemo.Infrastructure.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -28,13 +29,15 @@ namespace EmployeeDemo.Infrastructure.Repositories
         private readonly IConfiguration _configuration;
         private readonly IClaimsService _claimsService;
         private readonly ITokenStore _tokenStore;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public AccountRepository(AppDbContext dbContext,
             ICurrentTime timeService,
             IClaimsService claimsService,
             IPasswordHasher<Account> passwordHasher,
             IConfiguration configuration,
-            ITokenStore tokenStore)
+            ITokenStore tokenStore,
+            IHttpContextAccessor httpContextAccessor)
         {
             _dbContext = dbContext;
             _claimsService = claimsService;
@@ -42,6 +45,7 @@ namespace EmployeeDemo.Infrastructure.Repositories
             _passwordHasher = passwordHasher;
             _configuration = configuration;
             _tokenStore = tokenStore;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<ResponseModel> AddAccount(AccountLoginDTO account, RoleEnums role)
@@ -124,8 +128,14 @@ namespace EmployeeDemo.Infrastructure.Repositories
             };
             foreach (var r in roles) authClaims.Add(new Claim(ClaimTypes.Role, r));
 
-            // Generate device ID first (UUID)
-            var deviceId = Guid.NewGuid().ToString();
+            // Generate device fingerprint based on User-Agent + IP (deterministic, prevents spam)
+            var httpContext = _httpContextAccessor.HttpContext;
+            var userAgent = httpContext?.Request.Headers["User-Agent"].ToString() ?? "";
+            var ipAddress = httpContext?.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var deviceId = SessionMetadataExtractor.GenerateDeviceFingerprintId(userAgent, ipAddress);
+
+            // Check if this device already has an active session
+            var existingSession = await _tokenStore.GetSessionAsync(accountEntity.Id, deviceId);
 
             // Generate JWT access token with deviceId embedded as a claim
             var token = GenerateJWTToken.CreateToken(authClaims, _configuration, _timeService.GetCurrentTime(), deviceId);
@@ -148,6 +158,14 @@ namespace EmployeeDemo.Infrastructure.Repositories
             try
             {
                 await _tokenStore.StoreAsync(accountEntity.Id, deviceId, hashedRefreshToken, expiryInSeconds);
+
+                // Store/update session metadata (device info) with same TTL
+                if (httpContext != null)
+                {
+                    // If session exists, preserve CreatedAt; if new, set current time
+                    var session = existingSession ?? SessionMetadataExtractor.ExtractFromHttpContext(httpContext, deviceId);
+                    await _tokenStore.StoreSessionAsync(accountEntity.Id, deviceId, session, expiryInSeconds);
+                }
             }
             catch (Exception ex)
             {
@@ -250,6 +268,9 @@ namespace EmployeeDemo.Infrastructure.Repositories
             try
             {
                 await _tokenStore.StoreAsync(accountId, deviceId, hashedNewRefreshToken, expiryInSeconds);
+                
+                // Update last activity timestamp for the session
+                await _tokenStore.UpdateLastActivityAsync(accountId, deviceId, DateTime.UtcNow);
             }
             catch (Exception ex)
             {
@@ -295,6 +316,28 @@ namespace EmployeeDemo.Infrastructure.Repositories
             {
                 throw new InvalidOperationException($"Logout all failed: {ex.Message}", ex);
             }
+        }
+
+        /// <summary>
+        /// Gets current user info with all active sessions.
+        /// </summary>
+        public async Task<CurrentUserSessionResponse?> GetCurrentUserWithSessionsAsync(int userId, string currentDeviceId)
+        {
+            var account = await _dbContext.Accounts
+                .AsNoTracking()
+                .Include(a => a.AccountRoles).ThenInclude(ar => ar.Role)
+                .FirstOrDefaultAsync(a => a.Id == userId && !a.IsDeleted);
+
+            if (account == null)
+                return null;
+
+            var roles = account.AccountRoles?.Select(ar => ar.Role.Name).ToList() ?? [];
+            var userInfo = new UserSessionInfo(account.Id, account.Email ?? "", account.UserName ?? "", roles.AsReadOnly());
+
+            var currentSession = await _tokenStore.GetSessionAsync(userId, currentDeviceId);
+            var allSessions = await _tokenStore.GetAllSessionsAsync(userId);
+
+            return new CurrentUserSessionResponse(userInfo, currentSession, allSessions.AsReadOnly());
         }
     }
 }
