@@ -3,12 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EmployeeDemo.Domain.Entities
 {
-    // Domain Account (no longer inherits IdentityUser)
-    public class Account
+    // Domain Account (inherits BaseEntity for audit trail)
+    public class Account : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
-
         public string? Email { get; set; }
         public string? UserName { get; set; }
 
@@ -17,15 +14,11 @@ namespace EmployeeDemo.Domain.Entities
         public string? SecurityStamp { get; set; }
         public bool EmailConfirmed { get; set; }
 
-        public DateTime CreationDate { get; set; }
-        public int? CreatedBy { get; set; }
-        public DateTime? ModificationDate { get; set; }
-        public int? ModificationBy { get; set; }
-        public DateTime? DeletionDate { get; set; }
-        public int? DeleteBy { get; set; }
-        public bool IsDeleted { get; set; } = false;
-
         // roles (many-to-many)
         public ICollection<AccountRole> AccountRoles { get; set; } = new List<AccountRole>();
+
+        // meetings (as host and participant)
+        public ICollection<Meeting> MeetingsAsHost { get; set; } = new List<Meeting>();
+        public ICollection<MeetingParticipant> MeetingParticipations { get; set; } = new List<MeetingParticipant>();
     }
 }

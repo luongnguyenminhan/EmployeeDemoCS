@@ -1,4 +1,5 @@
 ﻿using EmployeeDemo.Domain.Entities;
+using EmployeeDemo.Infrastructure.FluentAPIs;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -19,15 +20,18 @@ namespace EmployeeDemo.Infrastructure
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<AccountRole> AccountRoles { get; set; }
+        public DbSet<Meeting> Meetings { get; set; }
+        public DbSet<MeetingParticipant> MeetingParticipants { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<Account>().ToTable("Accounts");
+            // Role configuration (inline)
             builder.Entity<Role>().ToTable("Roles");
-            builder.Entity<AccountRole>().ToTable("AccountRoles");
 
+            // AccountRole configuration (inline)
+            builder.Entity<AccountRole>().ToTable("AccountRoles");
             builder.Entity<AccountRole>().HasKey(ar => new { ar.AccountId, ar.RoleId });
 
             builder.Entity<AccountRole>()
@@ -39,6 +43,11 @@ namespace EmployeeDemo.Infrastructure
                    .HasOne(ar => ar.Role)
                    .WithMany(r => r.AccountRoles)
                    .HasForeignKey(ar => ar.RoleId);
+
+            // Apply Fluent API configurations
+            builder.ApplyConfiguration(new AccountConfig());
+            builder.ApplyConfiguration(new MeetingConfig());
+            builder.ApplyConfiguration(new MeetingParticipantConfig());
         }
 
         // Product and Student removed from DbContext (entities/tables deleted)
