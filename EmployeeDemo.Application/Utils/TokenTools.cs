@@ -15,12 +15,16 @@ namespace EmployeeDemo.Application.Utils
     {
         public static ClaimsPrincipal GetPrincipalFromExpiredToken(string? token, IConfiguration configuration)
         {
+            var secretKey = configuration["JWT:SecretKey"];
+            if (string.IsNullOrWhiteSpace(secretKey))
+                throw new InvalidOperationException("JWT:SecretKey is not configured. Set JWT:SecretKey in appsettings.json or environment variables.");
+
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateAudience = false, //you might want to validate the audience and issuer depending on your use case
                 ValidateIssuer = false,
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"])),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
                 ValidateLifetime = false //here we are saying that we don't care about the token's expiration date
             };
             var tokenHandler = new JwtSecurityTokenHandler();

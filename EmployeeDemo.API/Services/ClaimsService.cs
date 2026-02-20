@@ -8,12 +8,19 @@ namespace EmployeeDemo.API.Services
     {
         public ClaimsService(IHttpContextAccessor httpContextAccessor)
         {
-            // todo implementation to get the current userId
+            // extract numeric user id from claim (now integer)
             var identity = httpContextAccessor.HttpContext?.User?.Identity as ClaimsIdentity;
             var extractedId = AuthenTools.GetCurrentAccountId(identity);
-            GetCurrentUserId = string.IsNullOrEmpty(extractedId) ? Guid.Empty: Guid.Parse(extractedId);
+            if (!string.IsNullOrWhiteSpace(extractedId) && int.TryParse(extractedId, out var parsedId))
+            {
+                GetCurrentUserId = parsedId;
+            }
+            else
+            {
+                GetCurrentUserId = 0;
+            }
         }
 
-        public Guid GetCurrentUserId { get; }
+        public int GetCurrentUserId { get; }
     }
 }

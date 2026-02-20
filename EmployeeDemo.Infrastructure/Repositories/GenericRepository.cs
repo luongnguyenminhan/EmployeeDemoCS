@@ -21,10 +21,9 @@ namespace EmployeeDemo.Infrastructure.Repositories
         }
         public Task<List<TEntity>> GetAllAsync() => _dbSet.ToListAsync();
 
-        public async Task<TEntity?> GetByIdAsync(Guid id)
+        public async Task<TEntity?> GetByIdAsync(int id)
         {
             var result = await _dbSet.FirstOrDefaultAsync(x => x.Id == id);
-            // todo should throw exception when not found
             // todo should throw exception when not found
             if (result == null)
             {

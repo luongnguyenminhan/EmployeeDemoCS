@@ -15,7 +15,11 @@ namespace EmployeeDemo.Application.Utils
     {
         public static JwtSecurityToken CreateToken(List<Claim> authClaims, IConfiguration configuration, DateTime currentTime)
         {
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]));
+            var secretKey = configuration["JWT:SecretKey"];
+            if (string.IsNullOrWhiteSpace(secretKey))
+                throw new InvalidOperationException("JWT:SecretKey is not configured. Set JWT:SecretKey in appsettings.json or environment variables.");
+
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             _ = int.TryParse(configuration["JWT:TokenValidityInMinutes"], out int tokenValidityInMinutes);
 
             var token = new JwtSecurityToken(

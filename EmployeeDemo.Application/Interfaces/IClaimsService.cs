@@ -4,6 +4,6 @@ namespace EmployeeDemo.Application.Interfaces
 {
     public interface IClaimsService
     {
-        public Guid GetCurrentUserId { get; }
+        public int GetCurrentUserId { get; }
     }
 }

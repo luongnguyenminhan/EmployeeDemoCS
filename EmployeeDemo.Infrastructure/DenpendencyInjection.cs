@@ -18,8 +18,8 @@ namespace EmployeeDemo.Infrastructure
         public static IServiceCollection AddInfrastructuresService(this IServiceCollection services, string databaseConnection)
         {
 
-            services.AddIdentity<Account, IdentityRole>()
-                .AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
+            // we no longer use ASP.NET Identity types — register password hasher for Account
+            services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<EmployeeDemo.Domain.Entities.Account>, Microsoft.AspNetCore.Identity.PasswordHasher<EmployeeDemo.Domain.Entities.Account>>();
 
             services.AddDbContext<AppDbContext>(option => 
                 option.UseMySql(databaseConnection, ServerVersion.AutoDetect(databaseConnection)));

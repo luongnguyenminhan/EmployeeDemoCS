@@ -22,7 +22,7 @@ namespace EmployeeDemo.Application.Services
             _accountRepository = accountRepository;
         }
 
-        public async Task<Account> GetAccountByEmailAsync(string email)
+        public async Task<Account?> GetAccountByEmailAsync(string email)
         {
             return await _accountRepository.GetAccountByEmailAsync(email);
         }

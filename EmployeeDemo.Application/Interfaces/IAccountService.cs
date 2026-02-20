@@ -17,7 +17,7 @@ namespace EmployeeDemo.Application.Interfaces
 
         Task<ResponseModel> ResigerAsync(AccountLoginDTO account, RoleEnums role);
 
-        Task<Account> GetAccountByEmailAsync(string email);
+        Task<Account?> GetAccountByEmailAsync(string email);
 
         Task<ResponseLoginModel> RefreshToken(TokenModel token);
     }

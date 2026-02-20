@@ -2,7 +2,8 @@
 {
     public class AppConfiguration
     {
-        public string DatabaseConnection { get; set; }
-        public string JWTSecretKey { get; set; }
+        // values are bound from configuration at startup
+        public string DatabaseConnection { get; set; } = null!;
+        public string JWTSecretKey { get; set; } = null!;
     }
 }
