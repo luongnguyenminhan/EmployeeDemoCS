@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 namespace EmployeeDemo.Infrastructure
 {
-    // Identity uses ApplicationUser; Account is a separate domain/profile table
     public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)

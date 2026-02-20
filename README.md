@@ -696,7 +696,6 @@ Application/
 │   ├── Generate<TOKEN_TYPE>.cs              # Token generation
 │   └── <TOKEN_TYPE>Tools.cs                    # Token parsing/validation
 ├── IUnitOfWork.cs                       # Unit of Work pattern interface
-└── Class1.cs                            # (To be removed or used for shared logic)
 ```
 
 #### File Patterns
