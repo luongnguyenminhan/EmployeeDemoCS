@@ -2,6 +2,7 @@
 using EmployeeDemo.Application.ViewModels;
 using EmployeeDemo.Application.ViewModels.AccountViewModels;
 using EmployeeDemo.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
@@ -54,6 +55,7 @@ namespace EmployeeDemo.API.Controllers
         }
 
         [HttpPost("refresh-token")]
+        [Authorize]
         public async Task<IActionResult> RefreshToken([FromBody] TokenModel token)
         {
             try
@@ -72,6 +74,7 @@ namespace EmployeeDemo.API.Controllers
         }
 
         [HttpPost("logout")]
+        [Authorize]
         public async Task<IActionResult> LogoutAsync()
         {
             try
@@ -92,6 +95,7 @@ namespace EmployeeDemo.API.Controllers
         }
 
         [HttpPost("logout-all-devices")]
+        [Authorize]
         public async Task<IActionResult> LogoutAllDevicesAsync()
         {
             try

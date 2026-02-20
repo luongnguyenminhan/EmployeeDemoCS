@@ -7,7 +7,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
-builder.Services.AddSwaggerGen();
+
+// Add JWT authentication and authorization
+builder.Services.AddJwtAuthentication(builder.Configuration);
+
+// Add Swagger with JWT security
+builder.Services.AddSwaggerJwtSecurity();
 
 // project service registrations (API + Infrastructure)
 builder.Services.AddWebAPIService();
@@ -59,6 +64,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

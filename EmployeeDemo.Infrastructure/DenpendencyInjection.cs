@@ -33,10 +33,15 @@ namespace EmployeeDemo.Infrastructure
             services.AddSingleton(redisSettings);
 
             // Register Redis ConnectionMultiplexer as singleton (thread-safe, reusable)
+            // Use ConfigurationOptions and set AbortOnConnectFail = false so the app won't fail startup when Redis is temporarily unavailable.
             services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
                 var settings = sp.GetRequiredService<RedisSettings>();
-                return ConnectionMultiplexer.Connect(settings.ConnectionString);
+                var options = ConfigurationOptions.Parse(settings.ConnectionString);
+                options.AbortOnConnectFail = false;   // continue retrying instead of aborting the multiplexer
+                options.ConnectRetry = 5;            // retry attempts for transient failures
+
+                return ConnectionMultiplexer.Connect(options);
             });
 
             // Register token store implementation
