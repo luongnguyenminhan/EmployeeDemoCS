@@ -6,6 +6,7 @@ using EmployeeDemo.Application.ViewModels.AccountViewModels;
 using EmployeeDemo.Application.ViewModels.ResponseModels;
 using EmployeeDemo.Domain.Entities;
 using EmployeeDemo.Domain.Enums;
+using EmployeeDemo.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -26,18 +27,21 @@ namespace EmployeeDemo.Infrastructure.Repositories
         private readonly IPasswordHasher<Account> _passwordHasher;
         private readonly IConfiguration _configuration;
         private readonly IClaimsService _claimsService;
+        private readonly ITokenStore _tokenStore;
 
         public AccountRepository(AppDbContext dbContext,
             ICurrentTime timeService,
             IClaimsService claimsService,
             IPasswordHasher<Account> passwordHasher,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ITokenStore tokenStore)
         {
             _dbContext = dbContext;
             _claimsService = claimsService;
             _timeService = timeService;
             _passwordHasher = passwordHasher;
             _configuration = configuration;
+            _tokenStore = tokenStore;
         }
 
         public async Task<ResponseModel> AddAccount(AccountLoginDTO account, RoleEnums role)
@@ -61,8 +65,6 @@ namespace EmployeeDemo.Infrastructure.Repositories
                 domainAccount.PasswordHash = _passwordHasher.HashPassword(domainAccount, account.Password);
                 _dbContext.Accounts.Add(domainAccount);
                 await _dbContext.SaveChangesAsync();
-
-
 
                 // ensure requested role exists and assign it to the account (using domain Role / AccountRole)
                 var roleName = role.ToString();
@@ -122,17 +124,35 @@ namespace EmployeeDemo.Infrastructure.Repositories
             };
             foreach (var r in roles) authClaims.Add(new Claim(ClaimTypes.Role, r));
 
-            // generate refresh token and update domain profile
+            // Generate device ID first (UUID)
+            var deviceId = Guid.NewGuid().ToString();
+
+            // Generate JWT access token with deviceId embedded as a claim
+            var token = GenerateJWTToken.CreateToken(authClaims, _configuration, _timeService.GetCurrentTime(), deviceId);
+
+            // Generate refresh token (raw string)
             var refreshToken = TokenTools.GenerateRefreshToken();
+
+            // Hash refresh token for Redis storage
+            var hashKey = _configuration["JWT:RefreshTokenHashKey"];
+            if (string.IsNullOrWhiteSpace(hashKey))
+                return new ResponseLoginModel { Status = false, Message = "JWT:RefreshTokenHashKey not configured" };
+
+            var hashedRefreshToken = RedisTokenStore.HashRefreshToken(refreshToken, hashKey);
+
+            // Calculate TTL in seconds (RefreshTokenValidityInDays * 86400)
             _ = int.TryParse(_configuration["JWT:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
+            int expiryInSeconds = (refreshTokenValidityInDays > 0 ? refreshTokenValidityInDays : 7) * 86400;
 
-            accountEntity.RefreshToken = refreshToken;
-            accountEntity.RefreshTokenExpiryTime = DateTime.Now.AddDays(refreshTokenValidityInDays);
-
-            _dbContext.Accounts.Update(accountEntity);
-            await _dbContext.SaveChangesAsync();
-
-            var token = GenerateJWTToken.CreateToken(authClaims, _configuration, _timeService.GetCurrentTime());
+            // Store hashed token in Redis with TTL
+            try
+            {
+                await _tokenStore.StoreAsync(accountEntity.Id, deviceId, hashedRefreshToken, expiryInSeconds);
+            }
+            catch (Exception ex)
+            {
+                return new ResponseLoginModel { Status = false, Message = $"Token storage failed: {ex.Message}" };
+            }
 
             return new ResponseLoginModel
             {
@@ -141,6 +161,7 @@ namespace EmployeeDemo.Infrastructure.Repositories
                 JWT = new JwtSecurityTokenHandler().WriteToken(token),
                 Expired = token.ValidTo,
                 JWTRefreshToken = refreshToken,
+                DeviceId = deviceId
             };
         }
 
@@ -174,8 +195,21 @@ namespace EmployeeDemo.Infrastructure.Repositories
                 return new ResponseLoginModel { Status = false, Message = "Invalid account id in token." };
             }
 
-            var account = await _dbContext.Accounts.FindAsync(accountId);
-            if (account == null || account.RefreshToken != refreshToken || account.RefreshTokenExpiryTime <= DateTime.Now)
+            // Extract device ID from JWT claims
+            var identity = principal.Identity as ClaimsIdentity;
+            var deviceId = AuthenTools.GetDeviceIdFromClaims(identity);
+            if (string.IsNullOrWhiteSpace(deviceId))
+            {
+                return new ResponseLoginModel
+                {
+                    Status = false,
+                    Message = "Device ID not found in token. Token may be malformed or expired."
+                };
+            }
+
+            // Retrieve stored hash from Redis
+            var storedHash = await _tokenStore.GetAsync(accountId, deviceId);
+            if (storedHash == null)
             {
                 return new ResponseLoginModel
                 {
@@ -184,12 +218,43 @@ namespace EmployeeDemo.Infrastructure.Repositories
                 };
             }
 
-            var newAccessToken = GenerateJWTToken.CreateToken(principal.Claims.ToList(), _configuration, _timeService.GetCurrentTime());
+            // Hash incoming refresh token and compare
+            var hashKey = _configuration["JWT:RefreshTokenHashKey"];
+            if (string.IsNullOrWhiteSpace(hashKey))
+                return new ResponseLoginModel { Status = false, Message = "JWT:RefreshTokenHashKey not configured" };
+
+            bool isValid = RedisTokenStore.VerifyRefreshToken(refreshToken, storedHash, hashKey);
+            if (!isValid)
+            {
+                return new ResponseLoginModel
+                {
+                    Status = false,
+                    Message = "Invalid access token or refresh token!"
+                };
+            }
+
+            // Generate new access token
+            var newAccessToken = GenerateJWTToken.CreateToken(principal.Claims.ToList(), _configuration, _timeService.GetCurrentTime(), deviceId);
+
+            // Generate new refresh token
             var newRefreshToken = TokenTools.GenerateRefreshToken();
 
-            account.RefreshToken = newRefreshToken;
-            _dbContext.Accounts.Update(account);
-            await _dbContext.SaveChangesAsync();
+            // Hash new refresh token
+            var hashedNewRefreshToken = RedisTokenStore.HashRefreshToken(newRefreshToken, hashKey);
+
+            // Calculate TTL in seconds
+            _ = int.TryParse(_configuration["JWT:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
+            int expiryInSeconds = (refreshTokenValidityInDays > 0 ? refreshTokenValidityInDays : 7) * 86400;
+
+            // Store new hashed token in Redis (overwrites old one)
+            try
+            {
+                await _tokenStore.StoreAsync(accountId, deviceId, hashedNewRefreshToken, expiryInSeconds);
+            }
+            catch (Exception ex)
+            {
+                return new ResponseLoginModel { Status = false, Message = $"Token storage failed: {ex.Message}" };
+            }
 
             return new ResponseLoginModel
             {
@@ -197,9 +262,39 @@ namespace EmployeeDemo.Infrastructure.Repositories
                 Message = "Refresh Token successfully!",
                 JWT = new JwtSecurityTokenHandler().WriteToken(newAccessToken),
                 Expired = newAccessToken.ValidTo,
-                JWTRefreshToken = newRefreshToken
+                JWTRefreshToken = newRefreshToken,
+                DeviceId = deviceId
             };
+        }
+
+        /// <summary>
+        /// Logout from a specific device (removes refresh token for that device).
+        /// </summary>
+        public async Task LogoutAsync(int userId, string deviceId)
+        {
+            try
+            {
+                await _tokenStore.RemoveAsync(userId, deviceId);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Logout failed: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Logout from all devices (removes all refresh tokens for the user).
+        /// </summary>
+        public async Task LogoutAllDevicesAsync(int userId)
+        {
+            try
+            {
+                await _tokenStore.RemoveAllAsync(userId);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Logout all failed: {ex.Message}", ex);
+            }
         }
     }
 }
-

@@ -1,6 +1,54 @@
 @EmployeeDemo.API_HostAddress = http://localhost:5213
+@jwt_token = YOUR_JWT_TOKEN_HERE
+@refresh_token = YOUR_REFRESH_TOKEN_HERE
 
+### Weather Forecast
 GET {{EmployeeDemo.API_HostAddress}}/weatherforecast/
 Accept: application/json
+
+###
+
+### Register User
+POST {{EmployeeDemo.API_HostAddress}}/api/accounts/register?role=USER
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "SecurePassword123!"
+}
+
+###
+
+### Login (returns JWT with embedded deviceId and raw refreshToken)
+POST {{EmployeeDemo.API_HostAddress}}/api/accounts/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "SecurePassword123!"
+}
+
+###
+
+### Refresh Token (JWT contains device_id claim, no query param needed)
+POST {{EmployeeDemo.API_HostAddress}}/api/accounts/refresh-token
+Content-Type: application/json
+
+{
+  "accessToken": "{{jwt_token}}",
+  "refreshToken": "{{refresh_token}}"
+}
+
+###
+
+### Logout Current Device (deviceId extracted from JWT claims)
+POST {{EmployeeDemo.API_HostAddress}}/api/accounts/logout
+Authorization: Bearer {{jwt_token}}
+
+###
+
+### Logout All Devices (deviceId extracted from JWT claims)
+POST {{EmployeeDemo.API_HostAddress}}/api/accounts/logout-all-devices
+Authorization: Bearer {{jwt_token}}
 
 ###

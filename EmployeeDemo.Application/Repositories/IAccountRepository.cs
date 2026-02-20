@@ -21,5 +21,8 @@ namespace EmployeeDemo.Application.Repositories
 
         Task<ResponseLoginModel> RefreshToken(TokenModel token);
 
+        Task LogoutAsync(int userId, string deviceId);
+
+        Task LogoutAllDevicesAsync(int userId);
     }
 }

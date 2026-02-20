@@ -41,5 +41,15 @@ namespace EmployeeDemo.Application.Services
         {
             return await _accountRepository.AddAccount(account, role);
         }
+
+        public async Task LogoutAsync(int userId, string deviceId)
+        {
+            await _accountRepository.LogoutAsync(userId, deviceId);
+        }
+
+        public async Task LogoutAllDevicesAsync(int userId)
+        {
+            await _accountRepository.LogoutAllDevicesAsync(userId);
+        }
     }
 }

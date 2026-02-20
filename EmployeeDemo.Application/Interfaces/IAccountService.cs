@@ -20,5 +20,9 @@ namespace EmployeeDemo.Application.Interfaces
         Task<Account?> GetAccountByEmailAsync(string email);
 
         Task<ResponseLoginModel> RefreshToken(TokenModel token);
+
+        Task LogoutAsync(int userId, string deviceId);
+
+        Task LogoutAllDevicesAsync(int userId);
     }
 }

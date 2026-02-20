@@ -17,9 +17,6 @@ namespace EmployeeDemo.Domain.Entities
         public string? SecurityStamp { get; set; }
         public bool EmailConfirmed { get; set; }
 
-        public string? RefreshToken { get; set; }
-        public DateTime? RefreshTokenExpiryTime { get; set; }
-
         public DateTime CreationDate { get; set; }
         public int? CreatedBy { get; set; }
         public DateTime? ModificationDate { get; set; }

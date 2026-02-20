@@ -12,7 +12,7 @@ builder.Services.AddSwaggerGen();
 // project service registrations (API + Infrastructure)
 builder.Services.AddWebAPIService();
 #pragma warning disable CS8604 // Possible null reference argument.
-builder.Services.AddInfrastructuresService(builder.Configuration.GetConnectionString("DefaultConnection"));
+builder.Services.AddInfrastructuresService(builder.Configuration.GetConnectionString("DefaultConnection"), builder.Configuration);
 #pragma warning restore CS8604 // Possible null reference argument.
 
 var app = builder.Build();

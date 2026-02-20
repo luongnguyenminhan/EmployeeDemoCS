@@ -40,6 +40,30 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  redis:
+    image: redis:7.0-alpine
+    container_name: employeedemo-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    container_name: employeedemo-redisinsight
+    ports:
+      - "8001:8001"
+    volumes:
+      - redisinsight_data:/db
+    depends_on:
+      - redis
+    restart: unless-stopped
+
   adminer:
     image: adminer:latest
     container_name: employeedemo-adminer
@@ -55,4 +79,6 @@ services:
 
 volumes:
   mysqldata:
+    driver: local
+  redisinsight_data:
     driver: local

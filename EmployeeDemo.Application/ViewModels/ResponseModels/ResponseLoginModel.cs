@@ -17,5 +17,7 @@ namespace EmployeeDemo.Application.ViewModels.ResponseModels
         public DateTime? Expired {  get; set; }
 
         public string? JWTRefreshToken { get; set; } = "";
+
+        public string? DeviceId { get; set; }
     }
 }

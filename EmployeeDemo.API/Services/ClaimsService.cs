@@ -8,7 +8,7 @@ namespace EmployeeDemo.API.Services
     {
         public ClaimsService(IHttpContextAccessor httpContextAccessor)
         {
-            // extract numeric user id from claim (now integer)
+            // Extract numeric user ID from claim (now integer)
             var identity = httpContextAccessor.HttpContext?.User?.Identity as ClaimsIdentity;
             var extractedId = AuthenTools.GetCurrentAccountId(identity);
             if (!string.IsNullOrWhiteSpace(extractedId) && int.TryParse(extractedId, out var parsedId))
@@ -19,8 +19,13 @@ namespace EmployeeDemo.API.Services
             {
                 GetCurrentUserId = 0;
             }
+
+            // Extract device ID from JWT claims
+            GetDeviceId = AuthenTools.GetDeviceIdFromClaims(identity) ?? string.Empty;
         }
 
         public int GetCurrentUserId { get; }
+
+        public string GetDeviceId { get; }
     }
 }
