@@ -82,15 +82,15 @@ namespace EmployeeDemo.Infrastructure.Repositories
 
                 _dbContext.AccountRoles.Add(new AccountRole { AccountId = domainAccount.Id, RoleId = roleEntity.Id });
 
-                // ensure USER role exists and assign as default
-                var userRole = await _dbContext.Roles.FirstOrDefaultAsync(r => r.Name == RoleEnums.USER.ToString());
-                if (userRole == null)
-                {
-                    userRole = new Role { Name = RoleEnums.USER.ToString() };
-                    _dbContext.Roles.Add(userRole);
-                    await _dbContext.SaveChangesAsync();
-                }
-                _dbContext.AccountRoles.Add(new AccountRole { AccountId = domainAccount.Id, RoleId = userRole.Id });
+                // // ensure USER role exists and assign as default (unless it is the same as the requested role)
+                // var userRole = await _dbContext.Roles.FirstOrDefaultAsync(r => r.Name == RoleEnums.USER.ToString());
+                // if (userRole == null)
+                // {
+                //     userRole = new Role { Name = RoleEnums.USER.ToString() };
+                //     _dbContext.Roles.Add(userRole);
+                //     await _dbContext.SaveChangesAsync();
+                // }
+                // _dbContext.AccountRoles.Add(new AccountRole { AccountId = domainAccount.Id, RoleId = userRole.Id });
 
                 return new ResponseModel { Status = true, Message = "Your account is ready. Try to login now." };
             }

@@ -47,6 +47,8 @@ namespace EmployeeDemo.Infrastructure
 
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IMeetingRepository, MeetingRepository>();
+            services.AddScoped<IMeetingService, MeetingService>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 

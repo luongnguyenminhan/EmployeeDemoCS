@@ -9,8 +9,6 @@ namespace EmployeeDemo.Domain.Enums
     public enum RoleEnums
     {
         ADMIN, 
-        STAFF,
         USER,
-        STUDENT
     }
 }
