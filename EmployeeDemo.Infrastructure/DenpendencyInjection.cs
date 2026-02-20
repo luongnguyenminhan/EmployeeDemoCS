@@ -7,12 +7,10 @@ using EmployeeDemo.Infrastructure.Mapper;
 using EmployeeDemo.Infrastructure.Repositories;
 using EmployeeDemo.Infrastructure.Services;
 using EmployeeDemo.Infrastructure.Settings;
-using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using StackExchange.Redis;
 
 namespace EmployeeDemo.Infrastructure
@@ -22,7 +20,7 @@ namespace EmployeeDemo.Infrastructure
         public static IServiceCollection AddInfrastructuresService(this IServiceCollection services, string databaseConnection, IConfiguration configuration)
         {
             // we no longer use ASP.NET Identity types — register password hasher for Account
-            services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<EmployeeDemo.Domain.Entities.Account>, Microsoft.AspNetCore.Identity.PasswordHasher<EmployeeDemo.Domain.Entities.Account>>();
+            services.AddScoped<IPasswordHasher<Account>, PasswordHasher<Account>>();
 
             services.AddDbContext<AppDbContext>(option => 
                 option.UseMySql(databaseConnection, ServerVersion.AutoDetect(databaseConnection)));
@@ -49,12 +47,6 @@ namespace EmployeeDemo.Infrastructure
 
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IAccountService, AccountService>();
-
-            // Product and Student repositories/services removed per request
-            // services.AddScoped<IProductRepository, ProductRepository>();
-            // services.AddScoped<IProductService, ProductService>();
-            // services.AddScoped<IStudentRepository, StudentRepository>();
-            // services.AddScoped<IStudentService, StudentService>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
