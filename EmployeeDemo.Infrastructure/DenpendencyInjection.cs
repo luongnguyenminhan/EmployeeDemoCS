@@ -47,13 +47,12 @@ namespace EmployeeDemo.Infrastructure
 
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IMeetingRepository, MeetingRepository>();
+            services.AddScoped<IMeetingService, MeetingService>();
 
-            // the helper classes have been converted to static utils; no DI registration needed
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
-
             services.AddSingleton<ICurrentTime, CurrentTime>();
-
             services.AddAutoMapper(typeof(MapperConfigProfile).Assembly);
 
             return services;
