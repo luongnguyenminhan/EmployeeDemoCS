@@ -2,10 +2,10 @@
 using EmployeeDemo.Application.Interfaces;
 using EmployeeDemo.Application.Repositories;
 using EmployeeDemo.Application.Services;
+using EmployeeDemo.Application.Utils;
 using EmployeeDemo.Domain.Entities;
 using EmployeeDemo.Infrastructure.Mapper;
 using EmployeeDemo.Infrastructure.Repositories;
-using EmployeeDemo.Infrastructure.Services;
 using EmployeeDemo.Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -42,11 +42,13 @@ namespace EmployeeDemo.Infrastructure
                 return ConnectionMultiplexer.Connect(options);
             });
 
-            // Register token store implementation
-            services.AddScoped<ITokenStore, RedisTokenStore>();
+            // register redis token store concrete (used directly by application)
+            services.AddScoped<RedisTokenStore>();
 
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IAccountService, AccountService>();
+
+            // the helper classes have been converted to static utils; no DI registration needed
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 

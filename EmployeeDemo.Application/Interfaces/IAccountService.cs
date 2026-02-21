@@ -13,7 +13,7 @@ namespace EmployeeDemo.Application.Interfaces
 {
     public interface IAccountService
     {
-        Task<ResponseLoginModel> LoginAsync(AccountLoginDTO account);
+        Task<ResponseLoginModel> LoginAsync(AccountLoginDTO account, ViewModels.DeviceMetadata deviceMetadata);
 
         Task<ResponseModel> ResigerAsync(AccountLoginDTO account, RoleEnums role);
 

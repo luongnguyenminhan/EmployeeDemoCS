@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace EmployeeDemo.Infrastructure.Services;
+namespace EmployeeDemo.Application.Services;
 
 /// <summary>
 /// Extracts and generates device metadata from HTTP context for session tracking.

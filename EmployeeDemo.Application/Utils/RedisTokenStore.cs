@@ -1,4 +1,3 @@
-using EmployeeDemo.Application.Interfaces;
 using EmployeeDemo.Application.ViewModels;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
@@ -6,14 +5,14 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace EmployeeDemo.Infrastructure.Services
+namespace EmployeeDemo.Application.Utils
 {
     /// <summary>
-    /// Redis-based implementation of ITokenStore.
+    /// Redis-based helper for refresh token operations.
     /// Stores refresh tokens with HMAC-SHA256 hashing and automatic TTL expiration.
     /// Key format: refresh:{userId}:{deviceId}
     /// </summary>
-    public class RedisTokenStore : ITokenStore
+    public class RedisTokenStore
     {
         private readonly IConnectionMultiplexer _redis;
         private readonly IConfiguration _configuration;

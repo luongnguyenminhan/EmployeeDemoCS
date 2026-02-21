@@ -42,7 +42,7 @@ namespace EmployeeDemo.API
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!)),
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     ValidateLifetime = true,
@@ -57,7 +57,7 @@ namespace EmployeeDemo.API
                     policy.Requirements.Add(new ValidSessionRequirement()));
                 
                 // Set ValidSession as the default policy for all [Authorize] attributes
-                options.DefaultPolicy = options.GetPolicy("ValidSession");
+                options.DefaultPolicy = options.GetPolicy("ValidSession")!;
             });
 
             // Register the authorization handler

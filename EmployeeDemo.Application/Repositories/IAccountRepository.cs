@@ -11,20 +11,16 @@ using System.Threading.Tasks;
 
 namespace EmployeeDemo.Application.Repositories
 {
-    public interface IAccountRepository
+    public interface IAccountRepository: IGenericRepository<Account>
     {
-        Task<ResponseLoginModel> GetUserByEmailAndPassword(AccountLoginDTO account);
-
-        Task<ResponseModel> AddAccount(AccountLoginDTO account, RoleEnums role);
-
+        // basic profile queries
         Task<Account?> GetAccountByEmailAsync(string email);
+        Task<Account?> GetAccountWithRolesByEmailAsync(string email);
+        Task<Account?> GetAccountWithRolesByIdAsync(int accountId);
 
-        Task<ResponseLoginModel> RefreshToken(TokenModel token);
-
-        Task LogoutAsync(int userId, string deviceId);
-
-        Task LogoutAllDevicesAsync(int userId);
-
-        Task<CurrentUserSessionResponse?> GetCurrentUserWithSessionsAsync(int userId, string currentDeviceId);
+        // role helpers
+        Task<Role?> GetRoleByNameAsync(string roleName);
+        Task AddRoleAsync(Role role);
+        Task AddAccountRoleAsync(AccountRole accountRole);
     }
 }

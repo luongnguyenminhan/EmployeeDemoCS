@@ -1,4 +1,3 @@
-using EmployeeDemo.Application.Interfaces;
 using EmployeeDemo.Application.Utils;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
@@ -11,9 +10,9 @@ namespace EmployeeDemo.API.Authorization;
 /// </summary>
 public class ValidSessionHandler : AuthorizationHandler<ValidSessionRequirement>
 {
-    private readonly ITokenStore _tokenStore;
+    private readonly RedisTokenStore _tokenStore;
 
-    public ValidSessionHandler(ITokenStore tokenStore)
+    public ValidSessionHandler(RedisTokenStore tokenStore)
     {
         _tokenStore = tokenStore;
     }

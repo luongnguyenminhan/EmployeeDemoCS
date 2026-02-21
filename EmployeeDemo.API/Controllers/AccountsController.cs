@@ -41,7 +41,12 @@ namespace EmployeeDemo.API.Controllers
         {
             try
             {
-                var result = await _accountService.LoginAsync(account);
+                // extract device metadata from request headers / connection
+                var userAgent = Request.Headers["User-Agent"].ToString();
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+                var metadata = new DeviceMetadata { UserAgent = userAgent, IpAddress = ipAddress };
+
+                var result = await _accountService.LoginAsync(account, metadata);
                 if (result.Status)
                 {
                     return Ok(result);
