@@ -41,11 +41,7 @@ namespace EmployeeDemo.Application.Services
             {
                 return new ResponseModel { Status = false, Message = "StartTime must be in the future" };
             }
-
-            if (dto.EndTime.HasValue && dto.EndTime.Value <= dto.StartTime)
-            {
-                return new ResponseModel { Status = false, Message = "EndTime must be after StartTime" };
-            }
+            // end time no longer supplied by client; service will treat meeting as instantaneous or compute later
 
             // host determination
             var userId = _claimsService.GetCurrentUserId;
@@ -60,7 +56,7 @@ namespace EmployeeDemo.Application.Services
                 Title = dto.Title.Trim(),
                 Description = dto.Description,
                 StartTime = dto.StartTime,
-                EndTime = dto.EndTime ?? dto.StartTime,
+                EndTime = dto.StartTime, // default to start time (no duration)
                 HostId = userId,
                 CreatedBy = userId,
                 CreationDate = now
