@@ -22,10 +22,20 @@ namespace EmployeeDemo.API.Services
 
             // Extract device ID from JWT claims
             GetDeviceId = AuthenTools.GetDeviceIdFromClaims(identity) ?? string.Empty;
+
+            // store principal for role checks
+            UserPrincipal = httpContextAccessor.HttpContext?.User;
         }
+
+        private ClaimsPrincipal? UserPrincipal { get; }
 
         public int GetCurrentUserId { get; }
 
         public string GetDeviceId { get; }
+
+        public bool IsInRole(string role)
+        {
+            return UserPrincipal != null && UserPrincipal.IsInRole(role);
+        }
     }
 }

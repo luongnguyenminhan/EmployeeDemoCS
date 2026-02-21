@@ -5,7 +5,9 @@ using EmployeeDemo.Application.ViewModels.ResponseModels;
 using EmployeeDemo.Domain.Entities;
 using EmployeeDemo.Application;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using EmployeeDemo.Application.Commons;
 
 namespace EmployeeDemo.Application.Services
 {
@@ -78,6 +80,70 @@ namespace EmployeeDemo.Application.Services
             };
 
             return new ResponseModel { Status = true, Message = "Meeting created", Data = responseDto };
+        }
+
+        public async Task<Pagination<MeetingResponseDTO>> GetMeetingPaginationAsync(PaginationParameter paginationParameter)
+        {
+            var userId = _claimsService.GetCurrentUserId;
+            bool isAdmin = _claimsService.IsInRole("ADMIN");
+
+            Pagination<Meeting> queryResult;
+            if (isAdmin)
+            {
+                queryResult = await _meetingRepository.ToPagination(paginationParameter);
+            }
+            else
+            {
+                queryResult = await _meetingRepository.GetUserMeetingPaginationAsync(userId, paginationParameter);
+            }
+
+            // map entities to DTOs
+            var dtoItems = queryResult.Select(m => new MeetingResponseDTO
+            {
+                Id = m.Id,
+                Title = m.Title,
+                Description = m.Description,
+                StartTime = m.StartTime,
+                EndTime = m.EndTime,
+                HostId = m.HostId,
+                CreationDate = m.CreationDate
+            }).ToList();
+
+            return new Pagination<MeetingResponseDTO>(dtoItems, queryResult.TotalCount, queryResult.CurrentPage, queryResult.PageSize);
+        }
+
+        public async Task<ResponseModel> GetMeetingByIdAsync(int meetingId)
+        {
+            var meeting = await _meetingRepository.GetByIdWithParticipantsAsync(meetingId);
+            if (meeting == null)
+            {
+                return new ResponseModel { Status = false, Message = "Meeting not found" };
+            }
+
+            var userId = _claimsService.GetCurrentUserId;
+            bool isAdmin = _claimsService.IsInRole("ADMIN");
+            if (!isAdmin)
+            {
+                bool isHost = meeting.HostId == userId;
+                bool isParticipant = meeting.Participants.Any(p => p.AccountId == userId);
+                if (!isHost && !isParticipant)
+                {
+                    return new ResponseModel { Status = false, Message = "Unauthorized" };
+                }
+            }
+
+            var dto = new MeetingResponseDTO
+            {
+                Id = meeting.Id,
+                Title = meeting.Title,
+                Description = meeting.Description,
+                StartTime = meeting.StartTime,
+                EndTime = meeting.EndTime,
+                HostId = meeting.HostId,
+                CreationDate = meeting.CreationDate
+            };
+
+            return new ResponseModel { Status = true, Message = "", Data = dto };
         }
     }
 }
